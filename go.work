@@ -1,0 +1,7 @@
+go 1.22.1
+
+use (
+    2024-05-22/01-hello-world
+    2024-05-22/02-star-trek
+    2024-05-22/03-pineapple-pizza
+)
