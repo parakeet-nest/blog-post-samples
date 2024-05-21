@@ -1,1 +1,1 @@
-# blog-post-samples
+# Blog post samples about Parakeet
