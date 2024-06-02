@@ -54,11 +54,12 @@ function EscapeDoubleQuotes() {
     echo "${CONTENT}"
 }
 
-OLLAMA_URL="http://host.docker.internal:11434"
 
-#OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
+OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
 
-MODEL="mistral:7b"
+MODEL="phi3:mini"
+#MODEL="llama3:latest"
+
 
 read -r -d '' TOOLS_CONTENT <<- EOM
 [AVAILABLE_TOOLS]
@@ -105,6 +106,28 @@ read -r -d '' TOOLS_CONTENT <<- EOM
 [/AVAILABLE_TOOLS]
 EOM
 
+read -r -d '' SYSTEM_INTRODUCTION <<- EOM
+You have access to the following tools:
+EOM
+SYSTEM_INTRODUCTION=$(Sanitize "${SYSTEM_INTRODUCTION}")
+
+read -r -d '' SYSTEM_INSTRUCTIONS <<- EOM
+If the question of the user matched the description of a tool, the tool will be called.
+
+To call a tool, respond with a JSON object with the following structure: 
+{
+  "name": <name of the called tool>,
+  "arguments": {
+    <name of the argument>: <value of the argument>
+  }
+}
+
+search the name of the tool in the list of tools with the Name field
+EOM
+SYSTEM_INSTRUCTIONS=$(EscapeDoubleQuotes "${SYSTEM_INSTRUCTIONS}")
+SYSTEM_INSTRUCTIONS=$(Sanitize "${SYSTEM_INSTRUCTIONS}")
+
+
 TOOLS_CONTENT=$(EscapeDoubleQuotes "${TOOLS_CONTENT}")
 TOOLS_CONTENT=$(Sanitize "${TOOLS_CONTENT}")
 
@@ -120,7 +143,9 @@ read -r -d '' DATA <<- EOM
     "repeat_last_n": 2
   },
   "messages": [
+    {"role":"system", "content": "${SYSTEM_INTRODUCTION}"},
     {"role":"system", "content": "${TOOLS_CONTENT}"},
+    {"role":"system", "content": "${SYSTEM_INSTRUCTIONS}"},
     {"role":"user", "content": "${USER_CONTENT}"}
   ],
   "stream": false,
@@ -147,7 +172,9 @@ read -r -d '' DATA <<- EOM
     "repeat_last_n": 2
   },
   "messages": [
+    {"role":"system", "content": "${SYSTEM_INTRODUCTION}"},
     {"role":"system", "content": "${TOOLS_CONTENT}"},
+    {"role":"system", "content": "${SYSTEM_INSTRUCTIONS}"},
     {"role":"user", "content": "${USER_CONTENT}"}
   ],
   "stream": false,
