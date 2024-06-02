@@ -14,9 +14,9 @@ import (
 )
 
 func main() {
-	//ollamaUrl := "http://localhost:11434"
+	ollamaUrl := "http://localhost:11434"
 	// if working from a container
-	ollamaUrl := "http://host.docker.internal:11434"
+	//ollamaUrl := "http://host.docker.internal:11434"
 	model := "mistral:7b"
 
 	toolsList := []llm.Tool{
@@ -63,7 +63,6 @@ func main() {
 
 	userContent := tools.GenerateInstructions(`say "hey" to Sam`)
 
-
 	options := llm.Options{
 		Temperature:   0.0,
 		RepeatLastN:   2,
@@ -81,6 +80,8 @@ func main() {
 		Raw:     true,
 	}
 
+	wasmPlugin, _ := wasm.NewPlugin("./plugin/target/wasm32-unknown-unknown/debug/greetings.wasm", nil)
+
 	answer, err := completion.Chat(ollamaUrl, query)
 	if err != nil {
 		log.Fatal("😡:", err)
@@ -91,12 +92,11 @@ func main() {
 	if err != nil {
 		log.Fatal("😡:", err)
 	}
+
 	functionName := jsonRes["name"].(string)
 	name := jsonRes["arguments"].(map[string]interface{})["name"].(string)
 
 	fmt.Println("Calling", functionName, "with", name)
-
-	wasmPlugin, _ := wasm.NewPlugin("./plugin/target/wasm32-unknown-unknown/debug/greetings.wasm", nil)
 
 	// call the function of the wasm plugin
 	res, _ := wasmPlugin.Call(functionName, []byte(name))
